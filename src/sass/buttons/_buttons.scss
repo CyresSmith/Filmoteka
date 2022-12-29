@@ -11,6 +11,8 @@
   position: absolute;
   top: 8px;
   right: 8px;
+  width: 30px;
+  height: 30px;
   fill: #000000;
   background-color: transparent;
   transition-property: fill, transform;
@@ -23,9 +25,8 @@
     transform: rotate(180deg);
   }
 
-  &__cross {
-    width: 30px;
-    height: 30px;
+  &__icon {
+    fill: #000000;
   }
 }
 

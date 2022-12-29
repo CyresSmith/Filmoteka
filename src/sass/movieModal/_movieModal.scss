@@ -2,8 +2,6 @@
 
 .movieModal {
   position: absolute;
-  display: flex;
-  gap: calc($gap / 2);
   font-weight: 500;
   top: 50%;
   left: 50%;
@@ -18,15 +16,15 @@
   border-radius: 4px;
 }
 
+.movieModal__div {
+  display: flex;
+  width: 100%;
+  gap: calc($gap / 2);
+}
+
 .movieModal__image,
 .movieModal__info {
   width: calc((100% - $gap / 2) / 2);
-}
-
-.movieModal__image {
-}
-
-.movieModal__info {
 }
 
 .movieModal__table {
@@ -52,9 +50,6 @@
 .movieModal__parameter {
   color: $second-font-color;
   width: 152px;
-}
-
-.movieModal__value {
 }
 
 .movieModal__caption {
