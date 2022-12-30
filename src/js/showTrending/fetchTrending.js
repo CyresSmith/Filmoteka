@@ -1,10 +1,9 @@
 /* eslint-disable camelcase */
 import axios from 'axios';
-export { fetchTrending };
 
 const URL = 'https://api.themoviedb.org/3/trending';
 
-const fetchTrending = async (page = 1) => {
+export const fetchTrending = async (page = 1) => {
   const mediaType = 'movie';
   const timeWindow = 'week';
 

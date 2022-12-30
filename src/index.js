@@ -1,8 +1,7 @@
 import { hideScrollUpBtn } from './js/hide-scroll-up-button';
 import { smoothscroll } from './js/smoothscroll';
-import './js/showTrending/renderTrending';
-import './js/modal';
-
+import { renderTrending } from './js/showTrending/renderTrending';
+// import './js/modal';
 import './js/hideElementsInMobileVersion';
 
 smoothscroll();

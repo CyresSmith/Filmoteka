@@ -6,10 +6,8 @@ const refs = {
   gallery: document.querySelector('.gallery'),
 };
 
-const onMovieCardClick = async e => {
+export const onMovieCardClick = async e => {
   event.preventDefault();
-
-  // e.target.parentElement.dataset.id;
 
   let id;
 
