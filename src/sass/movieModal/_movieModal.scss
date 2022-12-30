@@ -1,6 +1,7 @@
 @import './backdrop';
 
 .movieModal {
+  display: flex;
   position: absolute;
   font-weight: 500;
   top: 50%;

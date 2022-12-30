@@ -13,7 +13,7 @@ const refs = {
   gallery: document.querySelector('.gallery'),
 };
 
-const renderMarkup = async () => {
+export const renderMarkup = async () => {
   try {
     const { page, results, total_pages, total_results } = await fetchTrending();
     const { genres } = await fetchGenres();
@@ -89,3 +89,5 @@ const galleryMarkupСreation = (results, genres) => {
     .join('');
   return markup;
 };
+
+renderMarkup();
