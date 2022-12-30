@@ -1,4 +1,4 @@
-const hiddenElementsOnMobileVersion = [
+export const hiddenElementsOnMobileVersion = [
   ...document.querySelectorAll('[id = hiddenOnMobile]'),
 ];
 

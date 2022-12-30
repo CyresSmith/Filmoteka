@@ -1,6 +1,4 @@
-export { smoothscroll };
-
-const smoothscroll = () => {
+export const smoothscroll = () => {
   const anchors = document.querySelectorAll('a[href*="#"]');
 
   for (let anchor of anchors) {

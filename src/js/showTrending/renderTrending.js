@@ -33,8 +33,6 @@ const renderMarkup = async () => {
   }
 };
 
-renderMarkup();
-
 const cardGenres = (genre_ids, genres) => {
   let cardGenresArr = [];
 
