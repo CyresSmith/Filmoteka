@@ -7,6 +7,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signInWithRedirect,
   connectAuthEmulator,
 } from 'firebase/auth';
 
@@ -64,6 +67,7 @@ const refs = {
   loginEmail: document.querySelector('#email'),
   loginPassword: document.querySelector('#password'),
   btnLogin: document.querySelector('#loginBtn'),
+  btnGoogleLogin: document.querySelector('#googleLoginBtn'),
   btnSignUp: document.querySelector('#SignUpBtn'),
   btnlogOut: document.querySelector('#logOut'),
   formField: document.querySelector('.auth-form__field'),
@@ -128,6 +132,7 @@ const monitorAuthState = async () => {
       refs.formField.classList.add('visually-hidden');
       refs.btnSignUp.classList.add('visually-hidden');
       refs.btnLogin.classList.add('visually-hidden');
+      refs.btnGoogleLogin.classList.add('visually-hidden');
       refs.btnlogOut.classList.remove('visually-hidden');
 
       refs.formTitle.innerHTML = `Logged in as: ${user.email}`;
@@ -146,3 +151,36 @@ const logOut = async () => {
 };
 
 refs.btnlogOut.addEventListener('click', logOut);
+
+// google auth =====================================================================================
+
+const provider = new GoogleAuthProvider();
+
+provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+
+provider.setCustomParameters({
+  login_hint: 'user@example.com',
+});
+
+refs.btnGoogleLogin.addEventListener('click', e => {
+  e.preventDefault();
+  signInWithPopup(auth, provider)
+    .then(result => {
+      // This gives you a Google Access Token. You can use it to access the Google API.
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential.accessToken;
+      // The signed-in user info.
+      const user = result.user;
+      // ...
+    })
+    .catch(error => {
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // The email of the user's account used.
+      const email = error.customData.email;
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      // ...
+    });
+});
