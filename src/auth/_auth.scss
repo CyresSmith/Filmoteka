@@ -1,0 +1,29 @@
+.auth-form {
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.auth-form__title {
+  margin-bottom: 10px;
+  color: white;
+}
+
+.auth-form__label {
+  margin-right: 10px;
+  color: $white;
+}
+
+.auth-form__field {
+  display: flex;
+}
+
+.auth-form__input {
+  border: 0;
+  border-radius: 5px;
+  background-color: $white;
+  margin-bottom: 10px;
+}

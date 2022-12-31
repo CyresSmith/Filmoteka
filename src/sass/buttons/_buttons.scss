@@ -66,6 +66,17 @@
     //   // transform: rotate(180deg);
     // }
   }
+
+  &--auth {
+    color: $white;
+    background-color: $accent-color;
+    border-radius: $border-radius;
+    padding: 7px 9px;
+  }
+
+  &--login {
+    margin-right: 10px;
+  }
 }
 
 .scroll-up-btn {
