@@ -7,5 +7,4 @@ import './js/signInModal';
 smoothscroll();
 window.addEventListener('scroll', hideScrollUpBtn);
 
-console.log('d/filmoteka');
-console.log('hello from heare');
+console.log('hello');
