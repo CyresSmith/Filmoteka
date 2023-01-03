@@ -10,6 +10,7 @@
 @import 'movieCard';
 @import 'pagination';
 @import 'footer';
-@import './movieModal/movieModal';
+@import './movieModal';
 @import './buttons/buttons';
-@import 'auth';
+@import 'signInModal';
+@import 'user';

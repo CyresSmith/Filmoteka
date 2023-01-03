@@ -8,76 +8,8 @@
           >Filmoteka</span
         ></a
       >
-      <ul class="navigation__list">
-        <li class="navigation__item">
-          <a class="navigation__link navigation__link--current" href="">HOME</a>
-        </li>
-        <li class="navigation__item">
-          <a class="navigation__link" href="">MY LIBRARY</a>
-        </li>
-      </ul>
+      <ul class="navigation__list"></ul>
     </nav>
-
-    <form class="auth-form">
-      <b class="auth-form__title">Авторизація</b>
-
-      <div class="auth-form__field">
-        <label class="auth-form__label" for="email">Пошта</label>
-        <input
-          autocomplete="email"
-          class="auth-form__input"
-          type="email"
-          name="email"
-          id="email"
-          placeholder=" "
-        />
-
-        <label class="auth-form__label" for="pass">Пароль</label>
-        <input
-          autocomplete="current-password"
-          class="auth-form__input"
-          type="password"
-          name="password"
-          id="password"
-          placeholder=" "
-          autofocus
-        />
-      </div>
-
-      <div class="auth-form__btnBox">
-        <button
-          class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--google"
-          type="submit"
-          id="googleLoginBtn"
-        >
-          Log in with Google
-        </button>
-
-        <button
-          class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--login"
-          type="submit"
-          id="loginBtn"
-        >
-          Log in
-        </button>
-
-        <button
-          class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--SignUpBtnHidden"
-          type="submit"
-          id="SignUpBtn"
-        >
-          Sign Up
-        </button>
-
-        <button
-          class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--logOut visually-hidden"
-          type="submit"
-          id="logOut"
-        >
-          Log Out
-        </button>
-      </div>
-    </form>
 
     <form class="searchForm" id="search-form">
       <input
@@ -97,5 +29,25 @@
     <p class="searchForm__message">
       Search result not successful. Enter the correct movie name and
     </p>
+    <div class="user">
+      <div class="user__box"></div>
+
+      <button
+        class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--logOut"
+        type="submit"
+        id="signInModalOpen"
+        data-signInModal-open
+      >
+        Log in / Sign Up
+      </button>
+
+      <button
+        class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--logOut visually-hidden"
+        type="submit"
+        id="logoutBtn"
+      >
+        Log Out
+      </button>
+    </div>
   </div>
 </header>

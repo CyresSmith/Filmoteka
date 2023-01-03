@@ -50,8 +50,7 @@
 .navigation {
   position: relative;
   display: flex;
-  align-items: center;
-  margin-left: auto;
+  align-items: baseline;
   color: $white;
 }
 
@@ -72,7 +71,7 @@
 
 .navigation__list {
   display: flex;
-  margin-left: auto;
+  margin-left: 40px;
 }
 
 .navigation__item {
