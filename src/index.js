@@ -6,5 +6,3 @@ import './js/firebase';
 import './js/signInModal';
 smoothscroll();
 window.addEventListener('scroll', hideScrollUpBtn);
-
-console.log('hello');

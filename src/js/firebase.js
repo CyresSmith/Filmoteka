@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { closeModalFunc } from './signInModal';
+import { getDatabase } from 'firebase/database';
 
 import {
   getAuth,
@@ -10,27 +10,14 @@ import {
   signOut,
   signInWithPopup,
   GoogleAuthProvider,
-  signInWithRedirect,
+  sendEmailVerification,
+  // signInWithRedirect,
   RecaptchaVerifier,
   signInWithPhoneNumber,
-  connectAuthEmulator,
+  // connectAuthEmulator,
 } from 'firebase/auth';
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-
-// const firebaseConfig = {
-//   apiKey: 'AIzaSyCrjIQ-i-DV-fkmDO-FB_HdRZGKiM7ste8',
-//   authDomain: 'filmoteka-project9.firebaseapp.com',
-//   projectId: 'filmoteka-project9',
-//   storageBucket: 'filmoteka-project9.appspot.com',
-//   messagingSenderId: '1031272501813',
-//   appId: '1:1031272501813:web:a2ca2d3955cbe4cf9a577c',
-//   measurementId: 'G-1NQ8JF0W90',
-// };
+import { getDatabase, ref, set } from 'firebase/database';
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
@@ -41,9 +28,14 @@ const firebaseApp = initializeApp({
   messagingSenderId: '1031272501813',
   appId: '1:1031272501813:web:a2ca2d3955cbe4cf9a577c',
   measurementId: 'G-1NQ8JF0W90',
+  databaseURL:
+    'https://filmoteka-project9-default-rtdb.europe-west1.firebasedatabase.app/',
 });
 
 const auth = getAuth(firebaseApp);
+
+// Initialize Realtime Database and get a reference to the service
+const database = getDatabase(firebaseApp);
 
 // ================= запуск локального эмулятора =================
 
@@ -55,13 +47,30 @@ const auth = getAuth(firebaseApp);
 
 // ===============================================================
 
+function writeUserData(userId, name, email, imageUrl) {
+  const db = getDatabase();
+  set(ref(db, 'users/' + userId), {
+    username: name,
+    email: email,
+    profile_picture: imageUrl,
+  });
+}
+
+// ============================================================================
+
 const refs = {
   backdrop: document.querySelector('[data-signInModal]'),
+  btnCloseModal: document.querySelector('[data-signInModal-close]'),
   btnSignIn: document.querySelector('#signInModalOpen'),
   btnLogOut: document.querySelector('#logoutBtn'),
+  btnLoginWithPhone: document.querySelector('#LogInWithPhoneBtn'),
+  btnPhoneLogin: document.querySelector('#LogInPhone'),
   btnGoogleLogin: document.querySelector('#googleLoginBtn'),
   btnLoginWithEmail: document.querySelector('#loginWithEmailBtn'),
   btnLoginEmail: document.querySelector('#loginEmailBtn'),
+  btnSignUpWithEmail: document.querySelector('#SignUpWitnEmailBtn'),
+  btnSignUpEmail: document.querySelector('#SignUpBtn'),
+  btnConfirmEmail: document.querySelector('#ConfirmEmail'),
 
   backdrop: document.querySelector('[data-signInModal]'),
   navigation: document.querySelector('.navigation__list'),
@@ -70,17 +79,39 @@ const refs = {
   boxSignInWithEmailModal: document.querySelector(
     '.signInModal__signInWithEmail'
   ),
+  boxSignUpWithEmail: document.querySelector('.signInModal__signUpWithEmail'),
+  boxLogInWithPhone: document.querySelector('.signInModal__LogInWithPhone'),
+  boxRecaptcha: document.querySelector('.recaptcha-container'),
 
   loginEmail: document.querySelector('#email'),
   loginPassword: document.querySelector('#password'),
+  signUpEmail: document.querySelector('#emailSignUp'),
+  signUpPassword: document.querySelector('#passwordSignUp'),
+  loginPhone: document.querySelector('#phone'),
+  loginPhoneCode: document.querySelector('#loginPhoneCode'),
 
-  btnSignUp: document.querySelector('#SignUpBtn'),
   userName: document.querySelector('.user__name'),
   formField: document.querySelector('.auth-form__field'),
   formTitle: document.querySelector('.auth-form__title'),
 };
 
-// monitorAuthState auth =====================================================================================
+// close Modal Func auth =====================================================================================
+
+export const closeModalFunc = () => {
+  refs.btnCloseModal.addEventListener('click', () => {
+    refs.backdrop.classList.add('backdrop--hidden');
+    refs.boxSignInWithEmailModal.classList.add('visually-hidden');
+    refs.boxSignUpWithEmail.classList.add('visually-hidden');
+    // refs.boxLogInWithPhone.classList.add('visually-hidden');
+    refs.boxSignInModal.classList.remove('visually-hidden');
+  });
+
+  if (refs.backdrop.classList.contains('backdrop--hidden')) {
+    btnCloseModal.removeEventListener('click', toggleModal);
+  }
+};
+
+// monitor Auth State =====================================================================================
 
 const monitorAuthState = async () => {
   try {
@@ -90,7 +121,7 @@ const monitorAuthState = async () => {
 
         switch (true) {
           case user.displayName !== null && user.photoURL !== null:
-            refs.boxUser.innerHTML = `<img class="user__img" src="${user.photoURL}" alt="" />
+            refs.boxUser.innerHTML = `<img class="user__img" src= ${user.photoURL} alt="" />
                                   <p class="user__greeting">Good to see You again</p>
                                   <p class="user__name"> ${user.displayName}</p>`;
             break;
@@ -104,11 +135,17 @@ const monitorAuthState = async () => {
             break;
         }
         refs.navigation.innerHTML = `<li class="navigation__item">
-                                      <a class="navigation__link navigation__link--current" href="">HOME</a>
-                                      </li>
-                                      <li class="navigation__item">
-                                      <a class="navigation__link" href="">MY LIBRARY</a>
-                                      </li>`;
+                                            <button class="navigation__link navigation__link--current"
+                                                type="button" id="homeBtn">
+                                                HOME
+                                            </button>
+                                     </li>
+                                     <li class="navigation__item">
+                                        <button class="navigation__link"
+                                            type="button" id="homeBtn">
+                                            MY LIBRARY
+                                        </button>
+                                     </li>`;
         refs.btnSignIn.classList.add('visually-hidden');
         refs.btnLogOut.classList.remove('visually-hidden');
         refs.backdrop.classList.add('backdrop--hidden');
@@ -130,19 +167,23 @@ const monitorAuthState = async () => {
 
 monitorAuthState();
 
+// on btn SignIn Click =====================================================================================
+
 const onbtnSignInClick = e => {
   event.preventDefault();
   refs.backdrop.classList.remove('backdrop--hidden');
   refs.btnGoogleLogin.addEventListener('click', onBtnGoogleLoginClick);
+  //   refs.btnLoginWithPhone.addEventListener('click', onBtnLoginWithPhoneClick);
   refs.btnLoginWithEmail.addEventListener('click', onbtnLoginWithEmailClick);
-  console.log('hello');
-  console.log(refs.btnLoginWithEmail);
+  refs.btnSignUpWithEmail.addEventListener('click', onBtnSignUpWithEmailClick);
   closeModalFunc();
 };
 
 const logOut = async () => {
   await signOut(auth);
 };
+
+// show Login Error =====================================================================================
 
 const showLoginError = error => {
   if (error.message == 'Firebase: Error (auth/wrong-password).') {
@@ -155,9 +196,11 @@ const showLoginError = error => {
   }
 };
 
-// signInWithEmailAndPassword auth =====================================================================================
+// sign In With Email And Password auth =====================================================================================
 
 const onbtnLoginWithEmailClick = () => {
+  refs.btnGoogleLogin.removeEventListener('click', onBtnGoogleLoginClick);
+  refs.btnLoginWithEmail.removeEventListener('click', onbtnLoginWithEmailClick);
   refs.btnLoginEmail.addEventListener('click', loginEmailPasspord);
   refs.boxSignInWithEmailModal.classList.remove('visually-hidden');
   refs.boxSignInModal.classList.add('visually-hidden');
@@ -167,7 +210,6 @@ signInWithEmailAndPassword(auth, email, password)
   .then(userCredential => {
     // Signed in
     const user = userCredential.user;
-    // ...
   })
   .catch(error => {
     const errorCode = error.code;
@@ -179,7 +221,14 @@ const loginEmailPasspord = async e => {
   const email = refs.loginEmail.value;
   const password = refs.loginPassword.value;
 
+  if (email && password) {
+    refs.backdrop.classList.add('backdrop--hidden');
+    refs.boxSignInWithEmailModal.classList.add('visually-hidden');
+    refs.boxSignInModal.classList.remove('visually-hidden');
+  }
+
   try {
+    // console.log(auth);
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
@@ -190,27 +239,42 @@ const loginEmailPasspord = async e => {
   }
 };
 
-// createAccount  =====================================================================================
+// create Account  =====================================================================================
 
-// const createAccount = async e => {
-//   e.preventDefault();
-//   const email = refs.loginEmail.value;
-//   const password = refs.loginPassword.value;
+const onBtnSignUpWithEmailClick = () => {
+  refs.btnGoogleLogin.removeEventListener('click', onBtnGoogleLoginClick);
+  refs.btnLoginWithEmail.removeEventListener('click', onbtnLoginWithEmailClick);
+  refs.btnLoginEmail.removeEventListener('click', loginEmailPasspord);
+  refs.btnSignUpEmail.addEventListener('click', createAccount);
+  refs.boxSignUpWithEmail.classList.remove('visually-hidden');
+  refs.boxSignInModal.classList.add('visually-hidden');
+};
 
-//   try {
-//     const userCredential = await createUserWithEmailAndPassword(
-//       auth,
-//       email,
-//       password
-//     );
+const createAccount = async e => {
+  e.preventDefault();
+  const email = refs.signUpEmail.value;
+  const password = refs.signUpPassword.value;
 
-//     // console.log(userCredential.user);
-//   } catch (error) {
-//     showLoginError(error);
-//   }
-// };
+  if (email && password) {
+    refs.backdrop.classList.add('backdrop--hidden');
+    refs.boxSignUpWithEmail.classList.add('visually-hidden');
+    refs.boxSignInModal.classList.remove('visually-hidden');
+  }
 
-// refs.btnSignUp.addEventListener('click', createAccount);
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    user = await userCredential.user;
+
+    await writeUserData(user.uid, user.displayName, user.email, user.photoURL);
+  } catch (error) {
+    showLoginError(error);
+  }
+};
 
 // google auth =====================================================================================
 
@@ -248,7 +312,7 @@ export const onBtnGoogleLoginClick = e => {
 // // recaptcha auth =====================================================================================
 
 // window.recaptchaVerifier = new RecaptchaVerifier(
-//   refs.btnLogin,
+//   'refs.btnPhoneLogin',
 //   {
 //     size: 'invisible',
 //     callback: response => {
@@ -259,12 +323,21 @@ export const onBtnGoogleLoginClick = e => {
 //   auth
 // );
 
-// // signInWithPhoneNumber auth =====================================================================================
+// // // sign In With Phone Number auth =====================================================================================
 
-// const phoneNumber = getPhoneNumberFromUserInput();
-// const appVerifier = window.recaptchaVerifier;
+// const onBtnLoginWithPhoneClick = () => {
+//   refs.btnGoogleLogin.removeEventListener('click', onBtnGoogleLoginClick);
+//   refs.btnLoginWithEmail.removeEventListener('click', onbtnLoginWithEmailClick);
+//   refs.btnLoginEmail.removeEventListener('click', loginEmailPasspord);
+//   refs.boxSignInWithEmailModal.classList.add('visually-hidden');
+//   refs.boxSignInModal.classList.add('visually-hidden');
+//   refs.boxLogInWithPhone.classList.remove('visually-hidden');
+// };
 
-// signInWithPhoneNumber(auth, phoneNumber, appVerifier)
+// const phoneNumber = refs.loginPhone.value;
+// // const confirmationResult = refs.loginPhoneCode.value;
+
+// signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
 //   .then(confirmationResult => {
 //     // SMS sent. Prompt user to type the code from the message, then sign the
 //     // user in with confirmationResult.confirm(code).

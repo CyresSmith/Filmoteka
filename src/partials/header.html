@@ -2,7 +2,7 @@
   <div class="container container__header">
     <div class="header__background"></div>
     <nav class="navigation">
-      <a class="navigation__logo" href=""
+      <a class="navigation__logo" href="index.html"
         ><img src="./images/svg/film.svg" alt="Filmoteka logo" /><span
           id="hiddenOnMobile"
           >Filmoteka</span
@@ -29,10 +29,11 @@
     <p class="searchForm__message">
       Search result not successful. Enter the correct movie name and
     </p>
-    <div class="user">
-      <div class="user__box"></div>
 
-      <button
+    <div class="user">
+  <div class="user__box">
+  </div>  
+  <button
         class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--logOut"
         type="submit"
         id="signInModalOpen"
@@ -42,12 +43,24 @@
       </button>
 
       <button
+        class="filmoteca-btn filmoteca-btn--auth visually-hidden"
+        type="submit"
+        id="ConfirmEmail"
+      >
+        Confirm Email
+      </button>
+
+      <button
         class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--logOut visually-hidden"
         type="submit"
         id="logoutBtn"
       >
         Log Out
       </button>
+</div>
+
+
+      
     </div>
   </div>
 </header>

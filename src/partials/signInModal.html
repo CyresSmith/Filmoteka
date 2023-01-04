@@ -21,27 +21,7 @@
             Log in with Google
           </button>
         </li>
-        <!-- <li class="signInModal__item">
-        <form class="signInModal__form">
-          <label class="signInModal__label" for="phone">Phone number</label>
-          <input
-            autocomplete="current-password"
-            class="signInModal__input"
-            type="tel"
-            name="phone"
-            id="phone"
-            placeholder=" "
-            autofocus
-          />
-        </form>
-        <button
-          class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--tel"
-          type="submit"
-          id="telLoginBtn"
-        >
-          Log in with phone
-        </button>
-      </li> -->
+
         <li class="signInModal__item">
           <button
             class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--login"
@@ -52,36 +32,10 @@
           </button>
         </li>
         <li class="signInModal__item">
-          <!-- <form class="signInModal__form">
-          <div class="signInModal__field">
-            <label class="signInModal__label" for="email">Пошта</label>
-            <input
-              autocomplete="email"
-              class="signInModal__input"
-              type="email"
-              name="email"
-              id="email"
-              placeholder=" "
-            />
-          </div>
-
-          <div class="signInModal__field">
-            <label class="signInModal__label" for="pass">Пароль</label>
-            <input
-              autocomplete="current-password"
-              class="signInModal__input"
-              type="password"
-              name="password"
-              id="password"
-              placeholder=" "
-              autofocus
-            />
-          </div>
-        </form> -->
           <button
             class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--SignUpBtnHidden"
             type="submit"
-            id="SignUpBtn"
+            id="SignUpWitnEmailBtn"
           >
             Sign Up with email
           </button>
@@ -122,6 +76,43 @@
           id="loginEmailBtn"
         >
           Log in
+        </button>
+      </form>
+    </div>
+
+    <div class="signInModal__signUpWithEmail visually-hidden">
+      <form class="signInModal__form">
+        <div class="signInModal__field">
+          <label class="signInModal__label" for="email">Пошта</label>
+          <input
+            autocomplete="email"
+            class="signInModal__input"
+            type="email"
+            name="email"
+            id="emailSignUp"
+            placeholder=" "
+          />
+        </div>
+
+        <div class="signInModal__field">
+          <label class="signInModal__label" for="pass">Пароль</label>
+          <input
+            autocomplete="current-password"
+            class="signInModal__input"
+            type="password"
+            name="password"
+            id="passwordSignUp"
+            placeholder=" "
+            autofocus
+          />
+        </div>
+
+        <button
+          class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--login"
+          type="submit"
+          id="SignUpBtn"
+        >
+          Sign Up
         </button>
       </form>
     </div>
