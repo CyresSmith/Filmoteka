@@ -34,6 +34,7 @@
 .filmoteca-btn {
   @extend %button;
   @include centered-flex();
+  width: 150px;
   font-size: 12px;
   line-height: 1.33;
   font-weight: 500;
@@ -47,24 +48,12 @@
   &--primary {
     color: $white;
     background-color: $accent-color;
-
-    // &:hover,
-    // &:focus {
-    //   // fill: $accent-color;
-    //   // transform: rotate(180deg);
-    // }
   }
 
   &--secondary {
     color: $first-font-color;
     background-color: transparent;
     border: 1px solid $first-font-color;
-
-    // &:hover,
-    // &:focus {
-    //   // fill: $accent-color;
-    //   // transform: rotate(180deg);
-    // }
   }
 
   &--auth {

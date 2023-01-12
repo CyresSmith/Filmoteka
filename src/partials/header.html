@@ -1,14 +1,29 @@
 <header class="header" id="top">
   <div class="container container__header">
-    <div class="header__background"></div>
     <nav class="navigation">
-      <a class="navigation__logo" href="index.html"
-        ><img src="./images/svg/film.svg" alt="Filmoteka logo" /><span
-          id="hiddenOnMobile"
-          >Filmoteka</span
-        ></a
-      >
-      <ul class="navigation__list"></ul>
+      <a class="navigation__logo" href="index.html">
+        <svg width="24" height="24">
+          <use href="./images/svg/symbol-defs.svg#film">
+            <span id="hiddenOnMobile">Filmoteka</span>
+          </use>
+        </svg>
+      </a>
+      <ul class="navigation__list visually-hidden">
+        <li class="navigation__item">
+          <button
+            class="navigation__link navigation__link--current"
+            id="home"
+            type="button"
+          >
+            HOME
+          </button>
+        </li>
+        <li class="navigation__item">
+          <button class="navigation__link" id="myLib" type="button">
+            MY LIBRARY
+          </button>
+        </li>
+      </ul>
     </nav>
 
     <form class="searchForm" id="search-form">
@@ -19,21 +34,33 @@
         placeholder="Movie search"
       />
       <button type="submit" disabled="true" class="searchForm__button">
-        <img
-          class="searchForm__icon"
-          src="./images/svg/search 2.svg"
-          alt="Filmoteka logo"
-        />
+        <svg class="searchForm__icon">
+          <use href="./images/svg/symbol-defs.svg#search"></use>
+        </svg>
       </button>
     </form>
-    <p class="searchForm__message">
-      Search result not successful. Enter the correct movie name and
-    </p>
+
+    <div class="myLib__btnsBox visually-hidden">
+      <button
+        class="filmoteca-btn filmoteca-btn--primary"
+        type="button"
+        id="watched"
+      >
+        Watched
+      </button>
+
+      <button
+        class="filmoteca-btn filmoteca-btn--secondary"
+        type="button"
+        id="queue"
+      >
+        Queue
+      </button>
+    </div>
 
     <div class="user">
-  <div class="user__box">
-  </div>  
-  <button
+      <div class="user__box"></div>
+      <button
         class="filmoteca-btn filmoteca-btn--auth filmoteca-btn--logOut"
         type="submit"
         id="signInModalOpen"
@@ -57,10 +84,6 @@
       >
         Log Out
       </button>
-</div>
-
-
-      
     </div>
   </div>
 </header>

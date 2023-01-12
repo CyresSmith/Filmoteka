@@ -1,7 +1,5 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
-
 import {
   getAuth,
   onAuthStateChanged,
@@ -10,14 +8,12 @@ import {
   signOut,
   signInWithPopup,
   GoogleAuthProvider,
-  sendEmailVerification,
-  // signInWithRedirect,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
   // connectAuthEmulator,
 } from 'firebase/auth';
-
-import { getDatabase, ref, set } from 'firebase/database';
+import { getDatabase, ref, set, child, get, update } from 'firebase/database';
+import { renderTranding } from './renderTranding';
+import { renderWatchedFromDb, renderQueueFromDb } from './renderMyLib';
+import { onSearchBtn } from './searchMovies';
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
@@ -32,10 +28,12 @@ const firebaseApp = initializeApp({
     'https://filmoteka-project9-default-rtdb.europe-west1.firebasedatabase.app/',
 });
 
-const auth = getAuth(firebaseApp);
+export const auth = getAuth(firebaseApp);
 
 // Initialize Realtime Database and get a reference to the service
-const database = getDatabase(firebaseApp);
+const db = getDatabase(firebaseApp);
+
+export const dbRef = ref(db);
 
 // ================= запуск локального эмулятора =================
 
@@ -45,21 +43,9 @@ const database = getDatabase(firebaseApp);
 
 // connectAuthEmulator(auth, 'http://localhost:9099/');
 
-// ===============================================================
-
-function writeUserData(userId, name, email, imageUrl) {
-  const db = getDatabase();
-  set(ref(db, 'users/' + userId), {
-    username: name,
-    email: email,
-    profile_picture: imageUrl,
-  });
-}
-
 // ============================================================================
 
 const refs = {
-  backdrop: document.querySelector('[data-signInModal]'),
   btnCloseModal: document.querySelector('[data-signInModal-close]'),
   btnSignIn: document.querySelector('#signInModalOpen'),
   btnLogOut: document.querySelector('#logoutBtn'),
@@ -71,6 +57,10 @@ const refs = {
   btnSignUpWithEmail: document.querySelector('#SignUpWitnEmailBtn'),
   btnSignUpEmail: document.querySelector('#SignUpBtn'),
   btnConfirmEmail: document.querySelector('#ConfirmEmail'),
+  btnHome: document.querySelector('#home'),
+  btnMyLib: document.querySelector('#myLib'),
+  btnWatched: document.querySelector('#watched'),
+  btnQueue: document.querySelector('#queue'),
 
   backdrop: document.querySelector('[data-signInModal]'),
   navigation: document.querySelector('.navigation__list'),
@@ -82,6 +72,7 @@ const refs = {
   boxSignUpWithEmail: document.querySelector('.signInModal__signUpWithEmail'),
   boxLogInWithPhone: document.querySelector('.signInModal__LogInWithPhone'),
   boxRecaptcha: document.querySelector('.recaptcha-container'),
+  boxMylibBtns: document.querySelector('.myLib__btnsBox'),
 
   loginEmail: document.querySelector('#email'),
   loginPassword: document.querySelector('#password'),
@@ -89,77 +80,129 @@ const refs = {
   signUpPassword: document.querySelector('#passwordSignUp'),
   loginPhone: document.querySelector('#phone'),
   loginPhoneCode: document.querySelector('#loginPhoneCode'),
-
+  modal: document.querySelector('[data-signInModal]'),
   userName: document.querySelector('.user__name'),
   formField: document.querySelector('.auth-form__field'),
   formTitle: document.querySelector('.auth-form__title'),
+  body: document.querySelector('body'),
+  searchForm: document.querySelector('#search-form'),
+  searchFormInput: document.querySelector('#search-form input'),
 };
 
 // close Modal Func auth =====================================================================================
 
-export const closeModalFunc = () => {
+const closeModalFunc = () => {
   refs.btnCloseModal.addEventListener('click', () => {
     refs.backdrop.classList.add('backdrop--hidden');
-    refs.boxSignInWithEmailModal.classList.add('visually-hidden');
-    refs.boxSignUpWithEmail.classList.add('visually-hidden');
-    // refs.boxLogInWithPhone.classList.add('visually-hidden');
-    refs.boxSignInModal.classList.remove('visually-hidden');
+    refs.body.classList.remove('scroll-hidden');
+  });
+
+  window.addEventListener('keydown', e => {
+    const ESC_KEY_CODE = 'Escape';
+    const isEscKey = e.code === ESC_KEY_CODE;
+    if (isEscKey) {
+      refs.backdrop.classList.add('backdrop--hidden');
+      refs.body.classList.remove('scroll-hidden');
+    }
+  });
+
+  refs.backdrop.addEventListener('click', e => {
+    if (event.currentTarget === event.target) {
+      refs.backdrop.classList.add('backdrop--hidden');
+      refs.body.classList.remove('scroll-hidden');
+    }
   });
 
   if (refs.backdrop.classList.contains('backdrop--hidden')) {
-    btnCloseModal.removeEventListener('click', toggleModal);
+    refs.btnCloseModal.removeEventListener('click', () => {
+      refs.backdrop.classList.add('backdrop--hidden');
+      refs.body.classList.remove('scroll-hidden');
+    });
+
+    window.removeEventListener('keydown', e => {
+      const ESC_KEY_CODE = 'Escape';
+      const isEscKey = e.code === ESC_KEY_CODE;
+      if (isEscKey) {
+        refs.backdrop.classList.add('backdrop--hidden');
+        refs.body.classList.remove('scroll-hidden');
+      }
+    });
+
+    refs.backdrop.removeEventListener('click', e => {
+      if (event.currentTarget === event.target) {
+        refs.backdrop.classList.add('backdrop--hidden');
+        refs.body.classList.remove('scroll-hidden');
+      }
+    });
   }
 };
 
 // monitor Auth State =====================================================================================
 
+const onUserLogin = user => {
+  if (user) {
+    refs.navigation.classList.remove('visually-hidden');
+
+    switch (true) {
+      case user.displayName !== null && user.photoURL !== null:
+        refs.boxUser.innerHTML = `<img class="user__img" src= ${user.photoURL} alt="" />
+                                      <div class="user__info">
+                                        <p class="user__greeting">Good to see You again</p>
+                                        <p class="user__name"> ${user.displayName}</p>
+                                      </div>`;
+        break;
+
+      case user.displayName === null && user.photoURL === null:
+        refs.boxUser.innerHTML = `<p class="user__greeting">Good to see You again</p>
+                                      <p class="user__name">Logged in as ${user.email}</p>`;
+        break;
+
+      default:
+        break;
+    }
+
+    refs.btnMyLib.addEventListener('click', e => {
+      e.preventDefault();
+      onMyLibBtnClick();
+    });
+
+    refs.btnHome.addEventListener('click', e => {
+      e.preventDefault();
+      onHomeBtnClick();
+    });
+
+    refs.btnSignIn.classList.add('visually-hidden');
+    refs.btnLogOut.classList.remove('visually-hidden');
+    refs.backdrop.classList.add('backdrop--hidden');
+    refs.btnLogOut.addEventListener('click', logOut);
+    refs.btnSignIn.removeEventListener('click', onbtnSignInClick);
+    refs.body.classList.remove('scroll-hidden');
+  } else {
+    refs.boxUser.innerHTML = `<p class="user__name">Hello Stranger</p>`;
+    refs.btnSignIn.classList.remove('visually-hidden');
+    refs.btnLogOut.classList.add('visually-hidden');
+    refs.btnLogOut.removeEventListener('click', logOut);
+    refs.btnSignIn.addEventListener('click', onbtnSignInClick);
+  }
+};
+
+// on logOut =====================================================================================
+
+const logOut = async () => {
+  await signOut(auth);
+  refs.navigation.classList.add('visually-hidden');
+  refs.searchForm.classList.remove('visually-hidden');
+  refs.boxMylibBtns.classList.add('visually-hidden');
+  refs.btnHome.classList.add('navigation__link--current');
+  refs.btnMyLib.classList.remove('navigation__link--current');
+  renderTranding();
+};
+
+// monitor Auth State =================================================================================
+
 const monitorAuthState = async () => {
   try {
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        console.log(user);
-
-        switch (true) {
-          case user.displayName !== null && user.photoURL !== null:
-            refs.boxUser.innerHTML = `<img class="user__img" src= ${user.photoURL} alt="" />
-                                  <p class="user__greeting">Good to see You again</p>
-                                  <p class="user__name"> ${user.displayName}</p>`;
-            break;
-
-          case user.displayName === null && user.photoURL === null:
-            refs.boxUser.innerHTML = `<p class="user__greeting">Good to see You again</p>
-                                  <p class="user__name">Logged in as ${user.email}</p>`;
-            break;
-
-          default:
-            break;
-        }
-        refs.navigation.innerHTML = `<li class="navigation__item">
-                                            <button class="navigation__link navigation__link--current"
-                                                type="button" id="homeBtn">
-                                                HOME
-                                            </button>
-                                     </li>
-                                     <li class="navigation__item">
-                                        <button class="navigation__link"
-                                            type="button" id="homeBtn">
-                                            MY LIBRARY
-                                        </button>
-                                     </li>`;
-        refs.btnSignIn.classList.add('visually-hidden');
-        refs.btnLogOut.classList.remove('visually-hidden');
-        refs.backdrop.classList.add('backdrop--hidden');
-        refs.btnLogOut.addEventListener('click', logOut);
-        refs.btnSignIn.removeEventListener('click', onbtnSignInClick);
-      } else {
-        refs.boxUser.innerHTML = `<p class="user__name">Hello Stranger</p>`;
-        refs.navigation.innerHTML = ``;
-        refs.btnSignIn.classList.remove('visually-hidden');
-        refs.btnLogOut.classList.add('visually-hidden');
-        refs.btnLogOut.removeEventListener('click', logOut);
-        refs.btnSignIn.addEventListener('click', onbtnSignInClick);
-      }
-    });
+    onAuthStateChanged(auth, user => onUserLogin(user));
   } catch (error) {
     showLoginError(error);
   }
@@ -167,20 +210,92 @@ const monitorAuthState = async () => {
 
 monitorAuthState();
 
+// on Home Btn Click ======================================================================
+
+const onHomeBtnClick = e => {
+  if (refs.btnHome.classList.contains('navigation__link--current')) {
+    return;
+  }
+
+  if (refs.searchFormInput.value) {
+    onSearchBtn();
+  } else {
+    renderTranding();
+  }
+
+  refs.btnHome.classList.add('navigation__link--current');
+  refs.btnMyLib.classList.remove('navigation__link--current');
+  refs.searchForm.classList.remove('visually-hidden');
+  refs.boxMylibBtns.classList.add('visually-hidden');
+
+  refs.btnWatched.removeEventListener('click', e => {
+    e.preventDefault();
+    if (refs.btnWatched.classList.contains('filmoteca-btn--primary')) {
+      return;
+    }
+    refs.btnWatched.classList.add('filmoteca-btn--primary');
+    refs.btnWatched.classList.remove('filmoteca-btn--secondary');
+    renderWatchedFromDb();
+  });
+
+  refs.btnQueue.removeEventListener('click', e => {
+    e.preventDefault();
+    if (refs.btnQueue.classList.contains('filmoteca-btn--primary')) {
+      return;
+    }
+    refs.btnWatched.classList.add('filmoteca-btn--primary');
+    refs.btnWatched.classList.remove('filmoteca-btn--secondary');
+    renderQueueFromDb();
+  });
+};
+
+// on MyLib Btn Click ======================================================================
+
+const onMyLibBtnClick = () => {
+  if (refs.btnMyLib.classList.contains('navigation__link--current')) {
+    return;
+  }
+
+  refs.btnHome.classList.remove('navigation__link--current');
+  refs.btnMyLib.classList.add('navigation__link--current');
+  refs.searchForm.classList.add('visually-hidden');
+  refs.boxMylibBtns.classList.remove('visually-hidden');
+
+  refs.btnWatched.addEventListener('click', e => {
+    e.preventDefault();
+    if (refs.btnWatched.classList.contains('filmoteca-btn--primary')) {
+      return;
+    }
+    refs.btnQueue.classList.remove('filmoteca-btn--primary');
+    refs.btnWatched.classList.add('filmoteca-btn--primary');
+    refs.btnWatched.classList.remove('filmoteca-btn--secondary');
+    renderWatchedFromDb();
+  });
+
+  refs.btnQueue.addEventListener('click', e => {
+    e.preventDefault();
+    if (refs.btnQueue.classList.contains('filmoteca-btn--primary')) {
+      return;
+    }
+    refs.btnWatched.classList.remove('filmoteca-btn--primary');
+    refs.btnQueue.classList.add('filmoteca-btn--primary');
+    refs.btnQueue.classList.remove('filmoteca-btn--secondary');
+    renderQueueFromDb();
+  });
+
+  renderWatchedFromDb();
+};
+
 // on btn SignIn Click =====================================================================================
 
 const onbtnSignInClick = e => {
-  event.preventDefault();
+  e.preventDefault();
   refs.backdrop.classList.remove('backdrop--hidden');
   refs.btnGoogleLogin.addEventListener('click', onBtnGoogleLoginClick);
-  //   refs.btnLoginWithPhone.addEventListener('click', onBtnLoginWithPhoneClick);
   refs.btnLoginWithEmail.addEventListener('click', onbtnLoginWithEmailClick);
   refs.btnSignUpWithEmail.addEventListener('click', onBtnSignUpWithEmailClick);
+  refs.body.classList.add('scroll-hidden');
   closeModalFunc();
-};
-
-const logOut = async () => {
-  await signOut(auth);
 };
 
 // show Login Error =====================================================================================
@@ -193,49 +308,6 @@ const showLoginError = error => {
     alert(`Invalid email, Try again`);
   } else {
     alert(`${error.message}`);
-  }
-};
-
-// sign In With Email And Password auth =====================================================================================
-
-const onbtnLoginWithEmailClick = () => {
-  refs.btnGoogleLogin.removeEventListener('click', onBtnGoogleLoginClick);
-  refs.btnLoginWithEmail.removeEventListener('click', onbtnLoginWithEmailClick);
-  refs.btnLoginEmail.addEventListener('click', loginEmailPasspord);
-  refs.boxSignInWithEmailModal.classList.remove('visually-hidden');
-  refs.boxSignInModal.classList.add('visually-hidden');
-};
-
-signInWithEmailAndPassword(auth, email, password)
-  .then(userCredential => {
-    // Signed in
-    const user = userCredential.user;
-  })
-  .catch(error => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-  });
-
-const loginEmailPasspord = async e => {
-  e.preventDefault();
-  const email = refs.loginEmail.value;
-  const password = refs.loginPassword.value;
-
-  if (email && password) {
-    refs.backdrop.classList.add('backdrop--hidden');
-    refs.boxSignInWithEmailModal.classList.add('visually-hidden');
-    refs.boxSignInModal.classList.remove('visually-hidden');
-  }
-
-  try {
-    // console.log(auth);
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-  } catch (error) {
-    showLoginError(error);
   }
 };
 
@@ -268,9 +340,41 @@ const createAccount = async e => {
       password
     );
 
-    user = await userCredential.user;
+    user = userCredential.user;
 
-    await writeUserData(user.uid, user.displayName, user.email, user.photoURL);
+    writeUserData(user.uid, user.displayName, user.email, user.photoURL);
+  } catch (error) {
+    showLoginError(error);
+  }
+};
+
+// sign In With Email And Password auth =====================================================================================
+
+const onbtnLoginWithEmailClick = () => {
+  refs.btnGoogleLogin.removeEventListener('click', onBtnGoogleLoginClick);
+  refs.btnLoginWithEmail.removeEventListener('click', onbtnLoginWithEmailClick);
+  refs.btnLoginEmail.addEventListener('click', loginEmailPasspord);
+  refs.boxSignInWithEmailModal.classList.remove('visually-hidden');
+  refs.boxSignInModal.classList.add('visually-hidden');
+};
+
+const loginEmailPasspord = async e => {
+  e.preventDefault();
+  const email = refs.loginEmail.value;
+  const password = refs.loginPassword.value;
+
+  if (email && password) {
+    refs.backdrop.classList.add('backdrop--hidden');
+    refs.boxSignInWithEmailModal.classList.add('visually-hidden');
+    refs.boxSignInModal.classList.remove('visually-hidden');
+  }
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
   } catch (error) {
     showLoginError(error);
   }
@@ -296,6 +400,23 @@ export const onBtnGoogleLoginClick = e => {
       // The signed-in user info.
       const user = result.user;
       // ...
+
+      get(child(dbRef, `users/${user.uid}`))
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            // console.log(snapshot.val());
+          } else {
+            writeUserData(
+              user.uid,
+              user.displayName,
+              user.email,
+              user.photoURL
+            );
+          }
+        })
+        .catch(error => {
+          console.error(error);
+        });
     })
     .catch(error => {
       // Handle Errors here.
@@ -309,42 +430,149 @@ export const onBtnGoogleLoginClick = e => {
     });
 };
 
-// // recaptcha auth =====================================================================================
+// data base =================================================================================
 
-// window.recaptchaVerifier = new RecaptchaVerifier(
-//   'refs.btnPhoneLogin',
-//   {
-//     size: 'invisible',
-//     callback: response => {
-//       // reCAPTCHA solved, allow signInWithPhoneNumber.
-//       onSignInSubmit();
-//     },
-//   },
-//   auth
-// );
+// add User in DB ============================================================================
 
-// // // sign In With Phone Number auth =====================================================================================
+function writeUserData(userId, name, email, imageUrl) {
+  set(ref(db, 'users/' + userId), {
+    username: name,
+    email: email,
+    profile_picture: imageUrl,
+  });
+}
 
-// const onBtnLoginWithPhoneClick = () => {
-//   refs.btnGoogleLogin.removeEventListener('click', onBtnGoogleLoginClick);
-//   refs.btnLoginWithEmail.removeEventListener('click', onbtnLoginWithEmailClick);
-//   refs.btnLoginEmail.removeEventListener('click', loginEmailPasspord);
-//   refs.boxSignInWithEmailModal.classList.add('visually-hidden');
-//   refs.boxSignInModal.classList.add('visually-hidden');
-//   refs.boxLogInWithPhone.classList.remove('visually-hidden');
-// };
+// add to watched ============================================================================
 
-// const phoneNumber = refs.loginPhone.value;
-// // const confirmationResult = refs.loginPhoneCode.value;
+export const onAddToWatchedBtnClick = async filmId => {
+  try {
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        AddToWatched(user.uid, filmId);
+      } else {
+        console.log('no user');
+      }
+    });
+  } catch (error) {
+    showLoginError(error);
+  }
+};
 
-// signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
-//   .then(confirmationResult => {
-//     // SMS sent. Prompt user to type the code from the message, then sign the
-//     // user in with confirmationResult.confirm(code).
-//     window.confirmationResult = confirmationResult;
-//     // ...
-//   })
-//   .catch(error => {
-//     // Error; SMS not sent
-//     // ...
-//   });
+function AddToWatched(uid, filmId) {
+  get(child(dbRef, `users/${uid}/watched`))
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        const amount = Array.from(snapshot.val()).length;
+        const postData = { [amount]: filmId };
+        update(child(dbRef, `users/${uid}/watched`), postData);
+      } else {
+        const postData = { watched: { 0: filmId } };
+        update(child(dbRef, `users/${uid}`), postData);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+// remove from watched ============================================================================
+
+export const onRemoveFromWatchedBtnClick = async filmId => {
+  try {
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        removeFromWatched(user.uid, filmId);
+      } else {
+        console.log('no user');
+      }
+    });
+  } catch (error) {
+    showLoginError(error);
+  }
+};
+
+function removeFromWatched(uid, filmId) {
+  get(child(dbRef, `users/${uid}/watched`))
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        const Data = Object.values(snapshot.val()).filter(
+          item => item !== filmId
+        );
+        let postData = { watched: Object.assign({}, Data) };
+        update(child(dbRef, `users/${uid}`), postData);
+      } else {
+        // const postData = { watched: { [filmId]: filmName } };
+        // update(child(dbRef, `users/${uid}`), postData);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+// add to queue ============================================================================
+
+export const onAddToQueueBtnClick = async filmId => {
+  try {
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        addToQueue(user.uid, filmId);
+      } else {
+        console.log('no user');
+      }
+    });
+  } catch (error) {
+    showLoginError(error);
+  }
+};
+
+function addToQueue(uid, filmId) {
+  get(child(dbRef, `users/${uid}/queue`))
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        const amount = Array.from(snapshot.val()).length;
+        const postData = { [amount]: filmId };
+        update(child(dbRef, `users/${uid}/queue`), postData);
+      } else {
+        const postData = { queue: { 0: filmId } };
+        update(child(dbRef, `users/${uid}`), postData);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+// remove from queue ============================================================================
+
+export const onRemoveFromQueueBtnClick = async filmId => {
+  try {
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        removeFromQueue(user.uid, filmId);
+      } else {
+        console.log('no user');
+      }
+    });
+  } catch (error) {
+    showLoginError(error);
+  }
+};
+
+function removeFromQueue(uid, filmId) {
+  get(child(dbRef, `users/${uid}/queue`))
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        const Data = Object.values(snapshot.val()).filter(
+          item => item !== filmId
+        );
+
+        let postData = { queue: Object.assign({}, Data) };
+
+        update(child(dbRef, `users/${uid}`), postData);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}

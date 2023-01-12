@@ -1,8 +1,13 @@
 import { hideScrollUpBtn } from './js/hide-scroll-up-button';
-import { smoothscroll } from './js/smoothscroll';
-import { renderMarkup } from './js/showTrending/renderTrending';
-import { hiddenElementsOnMobileVersion } from './js/hideElementsInMobileVersion';
+import { renderTranding } from './js/renderTranding';
+
 import './js/firebase';
 import './js/signInModal';
-smoothscroll();
+import './js/smoothscroll';
+import './js/pagination';
+
 window.addEventListener('scroll', hideScrollUpBtn);
+
+renderTranding();
+
+import './js/searchMovies';
